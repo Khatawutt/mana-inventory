@@ -64,6 +64,37 @@
   {% endif %}
 </div>
 
+<!-- Opening Stock -->
+<div class="card">
+  <h3>📦 รายการตั้งต้น (Opening Stock)</h3>
+  {% if opening_stock %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>รหัส</th><th>สินค้า</th><th>หน่วย</th><th>หมวด</th><th>ตั้งต้น</th><th>รับเข้า</th><th>จ่ายออก</th><th>คงเหลือ</th><th>PAR</th></tr>
+      </thead>
+      <tbody>
+        {% for it in opening_stock %}
+        <tr>
+          <td class="font-weight-bold">{{ it.code }}</td>
+          <td>{{ it.name }}</td>
+          <td class="txt-sm">{{ it.unit }}</td>
+          <td class="txt-sm">{{ it.category }}</td>
+          <td class="font-weight-bold">{{ it.opening }}</td>
+          <td class="txt-sm">{{ it.received }}</td>
+          <td class="txt-sm">{{ it.used }}</td>
+          <td class="font-weight-bold">{{ it.ending }}</td>
+          <td class="txt-sm">{{ it.par }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="txt-sm">ไม่มีข้อมูลตั้งต้นครับ</p>
+  {% endif %}
+</div>
+
 <!-- Recent Orders -->
 <div class="card">
   <h3>📦 ล่าสุด</h3>

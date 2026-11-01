@@ -486,6 +486,9 @@ def reports():
     stockouts = db.execute(
         "SELECT code, name, ending, par FROM items WHERE status='ต้องสั่งซื้อ' ORDER BY ending ASC"
     ).fetchall()
+    opening_stock = db.execute(
+        "SELECT code, name, unit, category, opening, received, used, ending, par FROM items WHERE opening > 0 ORDER BY category, code"
+    ).fetchall()
     recent = db.execute(
         """
         SELECT o.id, o.qty, o.status, i.name, o.created_at
@@ -503,7 +506,7 @@ def reports():
 
     return render_template(
         "reports.html", title=title, kpi_data=k, stockouts=stockouts,
-        recent=recent, counts=counts, period=period, today=today,
+        opening_stock=opening_stock, recent=recent, counts=counts, period=period, today=today,
     )
 
 @app.route("/items")
