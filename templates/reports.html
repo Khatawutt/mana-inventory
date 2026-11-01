@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Reports KPI — MANA GARDEN{% endblock %}
+{% block content %}
+
+<div class="flex-between mb-0">
+  <div>
+    <h1 class="page-title">📈 รายงาน KPI</h1>
+    <p class="page-sub">{{ title }}</p>
+  </div>
+  <div class="btn-group" style="display:flex; gap:8px;">
+    <a class="btn btn-outline" href="{{ url_for('dashboard') }}">📊 กลับ Dashboard</a>
+    <a class="btn btn-primary" href="{{ url_for('reports', period='monthly') }}">🖨️ พิมพ์ Report แบบ PDF</a>
+  </div>
+</div>
+
+<!-- KPI Summary Card -->
+<div class="card">
+  <h3>📊 สรุปตัวเลขเดือน {{ kpi_data.year if kpi_data else today.strftime('%B %Y') }}</h3>
+  {% if kpi_data %}
+  <div class="table-wrap">
+    <table class="table">
+      <tbody>
+        <tr><td class="txt-sm">Total Order</td><td class="font-weight-bold">{{ kpi_data.total_orders }}</td></tr>
+        <tr><td class="txt-sm">Total Qty Ordered</td><td class="font-weight-bold">{{ kpi_data.total_qty_ordered }}</td></tr>
+        <tr><td class="txt-sm">Total Qty Received</td><td class="font-weight-bold">{{ kpi_data.total_qty_received }}</td></tr>
+        <tr><td class="txt-sm">Total Counted</td><td class="font-weight-bold">{{ kpi_data.total_counted }}</td></tr>
+        <tr><td class="txt-sm">Opening Stock</td><td class="font-weight-bold">{{ kpi_data.total_opening }}</td></tr>
+        <tr><td class="txt-sm">Received Total</td><td class="font-weight-bold">{{ kpi_data.total_received_all }}</td></tr>
+        <tr><td class="txt-sm">Used Total</td><td class="font-weight-bold">{{ kpi_data.total_used_all }}</td></tr>
+        <tr><td class="txt-sm">Ending Stock</td><td class="font-weight-bold">{{ kpi_data.total_ending_all }}</td></tr>
+        <tr><td class="txt-sm">Stockout Items</td><td class="font-weight-bold {% if kpi_data.stockout_count > 0 %}color:var(--red);{% endif %}">{{ kpi_data.stockout_count }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="txt-sm">ยังไม่มีข้อมูลรายงานครับ</p>
+  {% endif %}
+</div>
+
+<!-- Stockout List -->
+<div class="card">
+  <h3>⚠️ สินค้าต้องสั่งซื้อเร่งด่วน (Stockout)</h3>
+  {% if stockouts %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>รหัส</th><th>สินค้า</th><th>หน่วย</th><th>คงเหลือ</th><th>PAR</th></tr>
+      </thead>
+      <tbody>
+        {% for it in stockouts %}
+        <tr>
+          <td class="font-weight-bold">{{ it.code }}</td>
+          <td>{{ it.name }}</td>
+          <td class="txt-sm">{{ it.unit }}</td>
+          <td class="font-weight-bold" style="color:#dc2626;">{{ it.ending }}</td>
+          <td class="txt-sm">{{ it.par }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="txt-sm">ไม่มี item ต้องสั่งซื้อครับ</p>
+  {% endif %}
+</div>
+
+<!-- Recent Orders -->
+<div class="card">
+  <h3>📦 ล่าสุด</h3>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>#</th><th>สถานะ</th><th>สินค้า</th><th>จำนวน</th><th>วันที่</th></tr>
+      </thead>
+      <tbody>
+        {% for o in recent %}
+        <tr>
+          <td class="txt-sm">#{{ o.id }}</td>
+          <td><span class="badge {% if o.status=='pending' %}badge-pending{% elif o.status=='approved' %}badge-approved{% elif o.status=='received' %}badge-received{% else %}badge-cancelled{% endif %}">{{ o.status }}</span></td>
+          <td>{{ o.name }}</td>
+          <td class="font-weight-bold">{{ o.qty }}</td>
+          <td class="txt-sm">{{ o.created_at }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="txt-sm">ไม่มีข้อมูลครับ</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Count Log Recent -->
+<div class="card">
+  <h3>📋 บันทึกการนับล่าสุด</h3>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>วันที่</th><th>นับโดย</th><th>สินค้า</th><th>จำนวน</th></tr>
+      </thead>
+      <tbody>
+        {% for c in counts %}
+        <tr>
+          <td class="txt-sm">{{ c.count_date }}</td>
+          <td class="txt-sm">{{ c.counted_by }}</td>
+          <td>{{ c.code }} {{ c.name }}</td>
+          <td class="font-weight-bold">{{ c.physical_qty }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="txt-sm">ไม่มีครับ</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Order / สั่งซื้อ — MANA GARDEN{% endblock %}
+{% block content %}
+
+<div class="flex-between mb-0">
+  <div>
+    <h1 class="page-title">📦 สั่งของ (Supply Order)</h1>
+    <p class="page-sub">สั่งซื้อสินค้าคงคลัง → Admin อนุมัติ → รับของ</p>
+  </div>
+</div>
+
+<!-- Order Form -->
+<div class="card">
+  <h3>📤 สร้างออเดอร์ใหม่</h3>
+  <form method="post" action="{{ url_for('order') }}">
+    <div class="form-row">
+      <div class="form-group" style="flex:2;">
+        <label for="order_item">สินค้า</label>
+        <select class="form-select" id="order_item" name="item_id" required>
+          <option value="">-- เลือกสินค้า --</option>
+          {% for it in items %}
+          <option value="{{ it.id }}" data-code="{{ it.code }}">{{ it.code }} — {{ it.name }} (คงเหลือ {{ it.ending }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group" style="flex:1;">
+        <label for="order_qty">จำนวนที่ต้องการสั่ง</label>
+        <input class="form-control" id="order_qty" name="qty" type="number" min="1" placeholder="0" required>
+      </div>
+      <div class="form-group" style="flex:2;">
+        <label for="order_note">หมายเหตุ (ใส่เพิ่มเติม)</label>
+        <input class="form-control" id="order_note" name="note" placeholder="เช่น ต้องการเพิ่มสำหรับเมนูหน้าใหม่">
+      </div>
+      <div class="form-group" style="flex:1;">
+        <button class="btn btn-primary w-100">✅ ส่งออเดอร์</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Pending Orders (Manager approve list) -->
+{% if current_role == 'admin' %}
+<div class="card">
+  <h3>⏳ ออเดอร์รออนุมัติ (Admin)</h3>
+  {% if orders %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>#</th><th>สถานะ</th><th>สินค้า</th><th>จำนวน</th><th>ผู้สั่ง</th><th>วันที่</th><th>จัดการ</th></tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td class="txt-sm">#{{ o.id }}</td>
+          <td><span class="badge badge-pending">รออนุมัติ</span></td>
+          <td>{{ o.code }} {{ o.name }}</td>
+          <td class="font-weight-bold">{{ o.qty }}</td>
+          <td>{{ o.requested_by }}</td>
+          <td class="txt-sm">{{ o.created_at }}</td>
+          <td style="white-space:nowrap;">
+            <form method="post" action="{{ url_for('approve_order', order_id=o.id) }}" style="display:inline;">
+              <input type="hidden" name="qty" value="{{ o.qty }}">
+              <button class="btn btn-success btn-sm">✅ อนุมัติ</button>
+            </form>
+            <form method="post" action="{{ url_for('cancel_order', order_id=o.id) }}" style="display:inline; margin-left:6px;">
+              <button class="btn btn-outline btn-sm">🔄 ยกเลิก</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="txt-sm">ไม่มีออเดอร์รออนุมัติครับ</p>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- Order History -->
+<div class="card">
+  <h3>📋 ประวัติออร์เดอร์</h3>
+  {% if orders %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>#</th><th>สถานะ</th><th>สินค้า</th><th>จำนวน</th><th>ผู้สั่ง</th><th>วันที่</th></tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td class="txt-sm">#{{ o.id }}</td>
+          <td><span class="badge {% if o.status=='pending' %}badge-pending{% elif o.status=='approved' %}badge-approved{% elif o.status=='received' %}badge-received{% else %}badge-cancelled{% endif %}">{{ o.status }}</span></td>
+          <td>{{ o.code }} {{ o.name }}</td>
+          <td class="font-weight-bold">{{ o.qty }}</td>
+          <td>{{ o.requested_by }}</td>
+          <td class="txt-sm">{{ o.created_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="txt-sm">ไม่มีประวัติออร์เดอร์ครับ</p>
+  {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เข้าสู่ระบบ — MANA GARDEN Inventory</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧾</text></svg>">
+  <style>
+    .hidden { display: none !important; }
+    .toast.show { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- ── Top Header ── -->
+<header class="top">
+  <div class="header-inner">
+    <div class="brand">
+      <span>🌿</span> MANA GARDEN
+    </div>
+    <nav class="nav-links">
+      
+      
+    </nav>
+    <div class="user-box">
+      <span class="user-name">👤 None</span>
+      <span class="badge badge-pending">
+        
+      </span>
+      <a href="/logout" style="color: var(--muted); font-size: 14px;">ออกจากระบบ</a>
+    </div>
+  </div>
+</header>
+
+<!-- ── Main Content ── -->
+<main class="main">
+  
+    
+  
+
+  
+
+<div class="hero" style="text-align:center; padding:32px; max-width:480px; margin:60px auto;">
+  <div style="font-size:48px;">🌿</div>
+  <h1 style="margin:8px 0 4px; font-size:28px;">MANA GARDEN Inventory</h1>
+  <p style="margin:0; opacity:.9;">ระบบจัดการสต็อกสินค้า ร้านอาหาร</p>
+</div>
+
+<div style="max-width:420px; margin:0 auto;">
+  <div class="card" style="padding:24px;">
+    <h2 style="margin:0 0 16px; font-size:20px;">🔑 เข้าสู่ระบบ</h2>
+    
+      
+    
+
+    <form method="post" action="/login">
+      <div class="form-group">
+        <label for="role">เลือกบทบาท</label>
+        <select class="form-select" id="role" name="role" required>
+          <option value="">-- เลือกบทบาท --</option>
+          <option value="admin">Admin / Brand &amp; Operation Manager</option>
+          <option value="kitchen">Kitchen / หัวหน้าแผนกครัว</option>
+          <option value="cafe">Cafe' / Senior Cafe'</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="name">ชื่อผู้ใช้ (พิมพ์ง่ายๆ)</label>
+        <input class="form-control" id="name" name="name" placeholder="เช่น Manager, Head Kitchen, Senior Cafe" required>
+      </div>
+      <button class="btn btn-primary w-100" style="margin-top:8px;">เข้าสู่ระบบ</button>
+    </form>
+  </div>
+
+  <div style="text-align:center; margin-top:16px; font-size:13px; color:var(--muted);">
+    <p>💡 ไม่ต้องจำรหัสครับ — แค่เลือกบทบาทและป้อนชื่อครับ</p>
+  </div>
+</div>
+
+
+</main>
+
+<!-- ── Toast container ── -->
+<div class="toast-wrap" id="toastWrap">
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+  // Flash ตัวเองเมื่อ reload หน้า
+  (function(){
+    const params = new URLSearchParams(window.location.search);
+    const msg = params.get('flash_msg');
+    if (msg) {
+      document.getElementById('toast').textContent = msg;
+      document.getElementById('toast').classList.add('show');
+      setTimeout(() => { document.getElementById('toast').classList.remove('show'); }, 3500);
+    }
+  })();
+
+  // Auto hide alert after 5s
+  setTimeout(() => {
+    document.querySelectorAll('.alert').forEach(a => { a.style.transition='1s'; a.style.opacity='0'; setTimeout(()=>a.remove(),1000); });
+  }, 5000);
+</script>
+
+</body>
+</html>

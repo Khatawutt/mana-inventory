@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Cafe' Inventory — MANA GARDEN{% endblock %}
+{% block content %}
+
+<div class="flex-between mb-0">
+  <div>
+    <h1 class="page-title">☕ Senior Cafe'</h1>
+    <p class="page-sub">นับของและจัดการสต็อกสินค้าคงคลังแผนกคาเฟ่เครื่องดื่ม</p>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card mb-0">
+  <div class="flex-wrap" style="gap:10px;">
+    <a class="btn btn-outline" href="{{ url_for('cafe') }}#count-section">📋 เริ่มนับของใหม่</a>
+    <a class="btn btn-outline" href="{{ url_for('order') }}">📦 สั่งของ (Pending Approval)</a>
+    <a class="btn btn-outline" href="{{ url_for('counts') }}">📋 ดู Log การนับ</a>
+    <a class="btn btn-outline" href="{{ url_for('items') }}?cat=cafe">📦 รายการสินค้าคาเฟ่</a>
+  </div>
+</div>
+
+<!-- Low stock Cafe items -->
+<div class="card" id="lowstock-section">
+  <h3>📦 สินค้าคาเฟ่ที่ต้องเร่งสั่งซื้อ (คงเหลือ ≤ PAR)</h3>
+  {% if cafe_items %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>ตัวเลข</th><th>รหัส</th><th>สินค้า</th><th>หน่วย</th><th>คงเหลือ</th><th>PAR</th><th>สถานะ</th></tr>
+      </thead>
+      <tbody>
+        {% for it in cafe_items %}
+        <tr>
+          <td class="txt-sm">{{ loop.index }}</td>
+          <td class="font-weight-bold">{{ it.code }}</td>
+          <td>{{ it.name }}</td>
+          <td class="txt-sm">{{ it.unit }}</td>
+          <td class="font-weight-bold {% if it.ending <= it.par|int*0.7 %}color:var(--red);{% endif %}">{{ it.ending }}</td>
+          <td class="txt-sm">{{ it.par }}</td>
+          <td><span class="badge badge-stockout">ต้องสั่งซื้อ</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="txt-sm">ไม่มีสินค้าคลองเหล่าต่ำครับ</p>
+  {% endif %}
+</div>
+
+<!-- Quick Count Form -->
+<div class="card" id="count-section">
+  <h3>📋 นับของประจำวัน (บันทึกจำนวนจริง)</h3>
+  <p class="txt-sm mb-0">เลือกสินค้าและพิมพ์ยอดที่นับได้จริง แล้วกดบันทึกครับ</p>
+  <form id="quickCountForm">
+    <div class="form-row">
+      <div class="form-group" style="flex:2;">
+        <label for="count_item">สินค้า</label>
+        <select class="form-select" id="count_item" name="item_id" required>
+          <option value="">-- เลือกสินค้า --</option>
+          {% for it in cafe_items %}
+          <option value="{{ it.id }}" data-code="{{ it.code }}">{{ it.code }} — {{ it.name }} (คงเหลือ {{ it.ending }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group" style="flex:1;">
+        <label for="count_qty">จำนวนนับจริง</label>
+        <input class="form-control" id="count_qty" name="physical_qty" type="number" min="0" placeholder="0">
+      </div>
+      <div class="form-group" style="flex:1;">
+        <label for="count_loc">Location</label>
+        <input class="form-control" id="count_loc" name="location" value="Main Store" readonly>
+      </div>
+      <div class="form-group" style="flex:1;">
+        <label for="count_by">นับโดย</label>
+        <input class="form-control" id="count_by" name="counted_by" value="{{ session.get('user') }}" readonly>
+      </div>
+      <div class="form-group" style="flex:1;">
+        <label for="count_note">หมายเหตุ</label>
+        <input class="form-control" id="count_note" name="note" placeholder="เช่น ทดลองเครื่องดื่มวันใหม่">
+      </div>
+      <div class="form-group" style="flex:1;">
+        <label for="count_date">วันที่</label>
+        <input class="form-control" id="count_date" name="count_date" value="{{ today.isoformat() }}" readonly>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-success">✅ บันทึกการนับ</button>
+  </form>
+</div>
+
+<!-- Quick Order Form -->
+<div class="card" id="order-section">
+  <h3>📦 สั่งของ (สำหรับผู้ที่ได้รับอนุมัติ)</h3>
+  <p class="txt-sm mb-0">อัดฉีดจำนวนที่ต้องการสั่งของจากระบบ ระบบจะนำไปให้ Admin อนุมัติครับ</p>
+  <form method="post" action="{{ url_for('order') }}">
+    <div class="form-row">
+      <div class="form-group" style="flex:2;">
+        <label for="order_item">สินค้า</label>
+        <select class="form-select" id="order_item" name="item_id" required>
+          <option value="">-- เลือกสินค้า --</option>
+          {% for it in cafe_items %}
+          <option value="{{ it.id }}" data-code="{{ it.code }}">{{ it.code }} — {{ it.name }} (คงเหลือ {{ it.ending }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group" style="flex:1;">
+        <label for="order_qty">จำนวนที่สั่ง</label>
+        <input class="form-control" id="order_qty" name="qty" type="number" min="1" placeholder="0" required>
+      </div>
+      <div class="form-group" style="flex:2;">
+        <label for="order_note">หมายเหตุ (ใส่เพิ่มเติม)</label>
+        <input class="form-control" id="order_note" name="note" placeholder="เช่น ต้องการเพิ่มสำหรับเมนูใหม่">
+      </div>
+      <div class="form-group" style="flex:1;">
+        <button class="btn btn-primary w-100">✅ สั่งของ</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

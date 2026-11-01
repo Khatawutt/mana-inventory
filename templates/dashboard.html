@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Dashboard KPI — MANA GARDEN{% endblock %}
+{% block content %}
+
+<div class="flex-between mb-0">
+  <div>
+    <h1 class="page-title">📊 สรุป KPI รายเดือน</h1>
+    <p class="page-sub">รายงานเดือน {{ kpi.year }} / {{ kpi.month }} — Brand &amp; Operation Manager</p>
+  </div>
+  <div class="btn-group" style="display:flex; gap:8px;">
+    <a href="{{ url_for('reports', period='monthly') }}" class="btn btn-outline">📄 พิมพ์ Report</a>
+    <a href="{{ url_for('order') }}" class="btn btn-primary">📦 สั่งของ</a>
+  </div>
+</div>
+
+<!-- KPI Summary -->
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="num">{{ kpi.total_orders }}</div>
+    <div class="label">📦 จำนวน Order</div>
+    <div class="sub">สั่งของเดือนนี้</div>
+  </div>
+  <div class="kpi">
+    <div class="num">{{ kpi.total_qty_ordered }}</div>
+    <div class="label">📦 จำนวนชิ้นที่สั่ง</div>
+    <div class="sub">รวมQty ทั้งหมด</div>
+  </div>
+  <div class="kpi">
+    <div class="num">{{ kpi.total_qty_received }}</div>
+    <div class="label">✅ ได้รับของ</div>
+    <div class="sub">ที่อนุมัติและรับเข้า</div>
+  </div>
+  <div class="kpi">
+    <div class="num {% if kpi.stockout_count > 5 %}bad{% elif kpi.stockout_count > 0 %}warn{% else %}good{% endif %}">
+      {% if kpi.stockout_count > 0 %}{{ kpi.stockout_count }}{% else %}—{% endif %}
+    </div>
+    <div class="label">⚠️ รายการสั่งซื้อซ้ำ</div>
+    <div class="sub">Item ที่ต่ำกว่า PAR</div>
+  </div>
+  <div class="kpi">
+    <div class="num {% if kpi.total_ending_all > kpi.total_opening %}good{% else %}warn{% endif %}">{{ kpi.total_ending_all }}</div>
+    <div class="label">📦 คงเหลือปลายงวด</div>
+    <div class="sub">รวมเป็นจำนวน</div>
+  </div>
+  <div class="kpi">
+    <div class="num">{{ total_items }}</div>
+    <div class="label">📦 สินค้าทั้งหมด</div>
+    <div class="sub">Kitchen + Cafe</div>
+  </div>
+</div>
+
+<!-- Stock Status -->
+<div class="card">
+  <div class="flex-between">
+    <h3>📦 สินค้าคงเหลือต่ำสุด (ต้องเร่งสั่งซื้อ)</h3>
+    <a href="{{ url_for('items') }}" style="font-size:14px; color:var(--accent);">ดูทั้งหมด →</a>
+  </div>
+  {% if high_value_items %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>รหัส</th><th>สินค้า</th><th>หน่วย</th><th>คงเหลือ</th><th>PAR</th><th>สถานะ</th></tr>
+      </thead>
+      <tbody>
+        {% for it in high_value_items %}
+        <tr>
+          <td class="font-weight-bold">{{ it.code }}</td>
+          <td>{{ it.name }}</td>
+          <td>{{ it.unit }}</td>
+          <td class="font-weight-bold" style="color:#dc2626;">{{ it.ending }}</td>
+          <td>{{ it.par }}</td>
+          <td><span class="badge badge-stockout">ต้องสั่งซื้อ</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="txt-sm">ไม่มีสินค้าคงเหลือต่ำครับ</p>
+  {% endif %}
+</div>
+
+<!-- Recent Orders -->
+<div class="card">
+  <h3>📦 ออเดอร์ล่าสุด</h3>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>#</th><th>สถานะ</th><th>สินค้า</th><th>จำนวน</th><th>ผู้สั่ง</th><th>วันที่</th></tr>
+      </thead>
+      <tbody>
+        {% for o in recent_orders %}
+        <tr>
+          <td class="txt-sm">#{{ o.id }}</td>
+          <td><span class="badge {% if o.status=='pending' %}badge-pending{% elif o.status=='approved' %}badge-approved{% elif o.status=='received' %}badge-received{% else %}badge-cancelled{% endif %}">{{ o.status }}</span></td>
+          <td>{{ o.name }}</td>
+          <td class="font-weight-bold">{{ o.qty }}</td>
+          <td>{{ o.requested_by }}</td>
+          <td class="txt-sm">{{ o.created_at }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="txt-sm">ไม่มี order ครบถ้วน</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

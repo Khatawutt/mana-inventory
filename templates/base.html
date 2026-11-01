@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}MANA GARDEN Inventory{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧾</text></svg>">
+  <style>
+    .hidden { display: none !important; }
+    .toast.show { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- ── Top Header ── -->
+<header class="top">
+  <div class="header-inner">
+    <div class="brand">
+      <span>🌿</span> MANA GARDEN
+    </div>
+    <nav class="nav-links">
+      {% if current_role == 'admin' %}
+        <a href="{{ url_for('dashboard') }}" class="active">📊 KPI</a>
+        <a href="{{ url_for('reports') }}">📈 Report</a>
+        <a href="{{ url_for('items') }}">📦 สินค้า</a>
+      {% endif %}
+      {% if current_role in ['kitchen', 'cafe', 'admin'] %}
+        <a href="{{ url_for('kitchen') }}">👨‍🍳 ครัว</a>
+        <a href="{{ url_for('cafe') }}">☕ คาเฟ่</a>
+        <a href="{{ url_for('counts') }}">📋 นับของ</a>
+        <a href="{{ url_for('order') }}">📦 สั่งของ</a>
+      {% endif %}
+    </nav>
+    <div class="user-box">
+      <span class="user-name">👤 {{ session.get('user') }}</span>
+      <span class="badge {% if current_role == 'admin' %}badge-normal{% elif current_role == 'kitchen' %}badge-stockout{% else %}badge-pending{% endif %}">
+        {{ current_role | upper }}
+      </span>
+      <a href="{{ url_for('logout') }}" style="color: var(--muted); font-size: 14px;">ออกจากระบบ</a>
+    </div>
+  </div>
+</header>
+
+<!-- ── Main Content ── -->
+<main class="main">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ── Toast container ── -->
+<div class="toast-wrap" id="toastWrap">
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+  // Flash ตัวเองเมื่อ reload หน้า
+  (function(){
+    const params = new URLSearchParams(window.location.search);
+    const msg = params.get('flash_msg');
+    if (msg) {
+      document.getElementById('toast').textContent = msg;
+      document.getElementById('toast').classList.add('show');
+      setTimeout(() => { document.getElementById('toast').classList.remove('show'); }, 3500);
+    }
+  })();
+
+  // Auto hide alert after 5s
+  setTimeout(() => {
+    document.querySelectorAll('.alert').forEach(a => { a.style.transition='1s'; a.style.opacity='0'; setTimeout(()=>a.remove(),1000); });
+  }, 5000);
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}สินค้าทั้งหมด — MANA GARDEN{% endblock %}
+{% block content %}
+
+<div class="flex-between mb-0">
+  <div>
+    <h1 class="page-title">📦 รายการสินค้าทั้งหมด</h1>
+    <p class="page-sub">จัดเรียงตามแผนก </p>
+  </div>
+  <div class="btn-group" style="display:flex; gap:8px;">
+    <a class="btn btn-outline" href="{{ url_for('dashboard') }}">📊 KPI</a>
+    <a class="btn btn-outline" href="{{ url_for('kitchen') }}">👨‍🍳 ครัว</a>
+    <a class="btn btn-outline" href="{{ url_for('cafe') }}">☕ คาเฟ่</a>
+  </div>
+</div>
+
+<!-- Category filter -->
+<div class="card" style="max-width:400px; margin-bottom:16px;">
+  <div class="flex-wrap">
+    <a class="btn {% if not cat %}btn-primary{% else %}btn-outline{% endif %}" href="{{ url_for('items') }}">ทั้งหมด</a>
+    <a class="btn {% if cat == 'kitchen' %}btn-primary{% else %}btn-outline{% endif %}" href="{{ url_for('items', cat='kitchen') }}">👨‍🍳 ครัว</a>
+    <a class="btn {% if cat == 'cafe' %}btn-primary{% else %}btn-outline{% endif %}" href="{{ url_for('items', cat='cafe') }}">☕ คาเฟ่</a>
+  </div>
+</div>
+
+<!-- Item Table -->
+{% if items %}
+<div class="card">
+  <div class="flex-between">
+    <h3>รายการสินค้า ({{ items|length }} รายการ)</h3>
+    {% if current_role == 'admin' %}
+      <a href="#" class="btn btn-outline btn-sm" onclick="toggleAddForm()">➕ เพิ่มสินค้าใหม่</a>
+    {% endif %}
+  </div>
+
+  {% if current_role == 'admin' %}
+  <div id="addForm" style="margin-bottom:16px; display:none;" class="card">
+    <h6>เพิ่มสินค้าใหม่</h6>
+    <form method="post" action="{{ url_for('admin_add_item') }}">
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label>รหัสสินค้า</label>
+          <input class="form-control" name="code" placeholder="เช่น M106817" required>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>ชื่อสินค้า</label>
+          <input class="form-control" name="name" placeholder="ชื่อสินค้า" required>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>หน่วย</label>
+          <input class="form-control" name="unit" value="ea">
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>ประเภท</label>
+          <select class="form-select" name="category">
+            <option>kitchen</option>
+            <option>cafe</option>
+            <option>general</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>คงเหลือเริ่มต้น (Opening)</label>
+          <input class="form-control" name="opening" type="number" value="0">
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>PAR (จุดสั่งซื้อซ้ำ)</label>
+          <input class="form-control" name="par" type="number" value="0">
+        </div>
+      </div>
+      <div class="flex-between" style="margin-top:8px;">
+        <button class="btn btn-success">เพิ่ม</button>
+        <button class="btn btn-outline" type="button" onclick="toggleAddForm()">ยกเลิก</button>
+      </div>
+    </form>
+    </div>
+  {% endif %}
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>รหัส</th><th>สินค้า</th><th>หน่วย</th><th>คงเหลือ</th><th>PAR</th><th>สถานะ</th>
+          {% if current_role == 'admin' %}<th>จัดการ</th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for it in items %}
+        <tr>
+          <td class="font-weight-bold">{{ it.code }}</td>
+          <td>{{ it.name }}</td>
+          <td class="txt-sm">{{ it.unit }}</td>
+          <td class="font-weight-bold {% if it.ending <= it.par|int*0.7 %}color:var(--red);{% endif %}">{{ it.ending }}</td>
+          <td class="txt-sm">{{ it.par }}</td>
+          <td><span class="badge badge-stockout">ต้องสั่งซื้อ</span></td>
+          {% if current_role == 'admin' %}
+          <td style="white-space:nowrap;">
+            <a href="{{ url_for('export_item', item_id=it.id) }}" class="btn btn-icon btn-sm btn-outline" title="Export">📥</a>
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <p class="txt-sm">ไม่พบสินค้าครับ</p>
+</div>
+{% endif %}
+
+<script>
+function toggleAddForm() {
+  const form = document.getElementById('addForm');
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+</script>
+
+{% endblock %}

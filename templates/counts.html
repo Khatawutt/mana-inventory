@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Count Log — MANA GARDEN{% endblock %}
+{% block content %}
+
+<div class="flex-between mb-0">
+  <div>
+    <h1 class="page-title">📋 บันทึกการนับของ (Count Log)</h1>
+    <p class="page-sub">วันที่: {{ count_date }} | Location: {{ location }} | บันทึก {{ total }} รายการ</p>
+  </div>
+  <div class="btn-group" style="display:flex; gap:8px;">
+    <a class="btn btn-outline" href="{{ url_for('kitchen') }}">👨‍🍳 กลับครัว</a>
+    <a class="btn btn-outline" href="{{ url_for('cafe') }}">☕ กลับคาเฟ่</a>
+  </div>
+</div>
+
+<!-- Filter -->
+<div class="card" style="max-width:600px; margin-bottom:16px;">
+  <form method="get" action="{{ url_for('counts') }}" style="display:flex; gap:10px; flex-wrap:wrap;">
+    <div style="flex:1; min-width:140px;">
+      <select name="location" class="form-select">
+        <option value="Main Store" {% if location == 'Main Store' %}selected{% endif %}>Main Store</option>
+        <option value="Kitchen" {% if location == 'Kitchen' %}selected{% endif %}>Kitchen</option>
+        <option value="Cafe" {% if location == 'Cafe' %}selected{% endif %}>Cafe</option>
+      </select>
+    </div>
+    <div style="flex:1; min-width:140px;">
+      <select name="count_date" class="form-select">
+        {% set d = count_date | replace('-', '') %}
+        <option value="{{ d }}" {% if count_date == d %}selected{% endif %}>{{ count_date }}</option>
+      </select>
+    </div>
+    <div style="flex:1; min-width:140px;">
+      <select name="item_id" class="form-select">
+        <option value="">-- ทั้งหมด --</option>
+        {% for r in rows %}
+        <option value="{{ r.item_id }}" {% if r.item_id|string == request.args.get('item_id') %}selected{% endif %}>{{ r.code }} {{ r.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button class="btn btn-primary">🔍 ค้นหา</button>
+  </form>
+</div>
+
+<!-- Results -->
+<div class="card">
+  <div class="flex-between">
+    <h3>📊 ผลการนับ ({{ rows|length }} รายการ)</h3>
+    <a href="{{ url_for('counts') }}" class="btn btn-outline btn-sm">🔄 รีเฟรช</a>
+  </div>
+
+  {% if rows %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>รหัส</th><th>สินค้า</th><th>หน่วย</th><th>คงเหลือระบบ</th><th>นับจริง</th><th>ความต่าง</th><th>สถานะ</th></tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td class="font-weight-bold">{{ r.code }}</td>
+          <td>{{ r.name }}</td>
+          <td class="txt-sm">{{ r.unit }}</td>
+          <td>{{ r.sys_qty or 0 }}</td>
+          <td class="font-weight-bold" style="color:#dc2626;">{{ r.physical_qty }}</td>
+          <td class="txt-sm">
+            {% set diff = (r.physical_qty or 0) - (r.sys_qty or 0) %}
+            <span style="color: {% if diff > 0 %}#16a34a{% elif diff < 0 %}#dc2626{% else %}#666{% endif %};">
+              {{ diff }}
+            </span>
+          </td>
+          <td>
+            {% if r.physical_qty == r.sys_qty %}
+              <span class="badge badge-normal">ตรง</span>
+            {% elif r.physical_qty < r.sys_qty %}
+              <span class="badge badge-stockout">น้อยกว่า</span>
+            {% else %}
+              <span class="badge badge-stockout">มากกว่า</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="txt-sm">ไม่พบข้อมูลการนับครับ</p>
+  {% endif %}
+</div>
+
+{% endblock %}
